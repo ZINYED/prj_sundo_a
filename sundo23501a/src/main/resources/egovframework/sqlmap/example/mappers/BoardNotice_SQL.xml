@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.postgres.sample.service.impl.dao.jmh.BoardNoticeDAO">
+
+	<!-- 코드 분류 가져오기 -->
+	<select id="JmhCodeList2" parameterType="Code" resultType="Code">
+		SELECT *
+		FROM CODE
+		WHERE field_name = #{field_name}
+		ORDER BY cate_code
+	</select>	
+	
+	<!-- 총 문서수 -->
+	<select id="JmhTotalCount" parameterType="BoardNotice" resultType="int">
+		SELECT Count(*) 
+		FROM BOARD_NOTICE
+	</select>
+
+	<!-- 검색 문서수 -->
+	<select id="JmhSearchCount" parameterType="BoardNotice" resultType="int">
+		SELECT Count(*)
+		FROM (	SELECT p.*, u.user_name 
+				FROM BOARD_NOTICE p, USER_INFO u 
+				WHERE p.user_id = u.user_id ) a
+		WHERE 1=1
+		AND 
+			<choose>
+				<when test="search == '1_all'">
+					 (
+					 a.subject like '%' || #{keyword} || '%' 
+					 OR a.body like '%' || #{keyword} || '%'
+					 OR a.user_name like '%' || #{keyword} || '%'
+					 )
+				</when>
+				<when test="search == '2_subject'">
+					 a.subject like '%' || #{keyword} || '%'
+				</when>
+				<when test="search == '3_subject_body'">
+					 (
+					 a.subject like '%' || #{keyword} || '%'
+					 OR a.body like '%' || #{keyword} || '%'
+					 )
+				</when>
+				<otherwise>
+					 (
+					 a.subject like '%' || #{keyword} || '%' 
+					 OR a.body like '%' || #{keyword} || '%'
+					 OR a.user_name like '%' || #{keyword} || '%'
+					 )
+				</otherwise>
+			</choose>
+	</select>
+	
+	<!-- 문서 목록 -->
+	<select id="JmhBoardList" parameterType="BoardNotice" resultType="BoardNotice">
+		SELECT *
+		FROM
+		(
+			SELECT (row_number() over()) AS rn, a.*
+			FROM
+					( SELECT p.*, u.user_name 							
+					  FROM BOARD_NOTICE p, USER_INFO u 
+					  WHERE p.user_id = u.user_id 
+					  ORDER BY p.doc_no DESC) a
+		)
+		WHERE rn BETWEEN #{start} AND #{end}
+	</select>
+
+	<!-- 검색 목록 -->
+	<select id="JmhSearchList" parameterType="BoardNotice" resultType="BoardNotice">
+		SELECT *
+		FROM
+		(
+			SELECT (row_number() over()) AS rn, a.*
+			FROM
+					( SELECT p.*, u.user_name 
+					  FROM BOARD_NOTICE p, USER_INFO u 
+					  WHERE p.user_id = u.user_id 
+					  ORDER BY p.doc_no DESC) a
+			WHERE 1=1
+			AND 
+			<choose>
+				<when test="search == '1_all'">
+					 (
+					 a.subject like '%' || #{keyword} || '%' 
+					 OR a.body like '%' || #{keyword} || '%'
+					 OR a.user_name like '%' || #{keyword} || '%'
+					 )
+				</when>
+				<when test="search == '2_subject'">
+					 a.subject like '%' || #{keyword} || '%'
+				</when>
+				<when test="search == '3_subject_body'">
+					 (
+					 a.subject like '%' || #{keyword} || '%'
+					 OR a.body like '%' || #{keyword} || '%'
+					 )
+				</when>
+				<otherwise>
+					 (
+					 a.subject like '%' || #{keyword} || '%' 
+					 OR a.body like '%' || #{keyword} || '%'
+					 OR a.user_name like '%' || #{keyword} || '%'
+					 )
+				</otherwise>
+			</choose>
+		)
+		WHERE rn BETWEEN #{start} AND #{end}
+		
+	</select>
+	
+	<!-- 문서 등록 -->
+	<insert id="JmhInsertBoard" parameterType="BoardNotice">
+		<selectKey resultType="int" keyProperty="doc_no" order="BEFORE">
+        	SELECT COALESCE(MAX(doc_no),0)+1 FROM BOARD_NOTICE
+    	</selectKey>
+		INSERT INTO 
+			BOARD_NOTICE(
+				DOC_NO, 
+				SUBJECT,
+				USER_ID,
+				CREATE_DATE, 
+				BD_COUNT,
+				BODY,
+				CREATE_DATETIME,
+				MODIFY_DATETIME
+			) 				
+			VALUES(
+				#{doc_no}, 
+				#{subject},
+				#{user_id},
+				CURRENT_DATE, 
+				0,
+				#{body},
+				NOW(),
+				NOW()
+			)	
+	</insert>
+	
+	<!-- 문서 조회 -->
+	<select id="JmhSelectBoard" parameterType="BoardNotice" resultType="BoardNotice">
+		SELECT 	p.*, u.user_name
+		FROM BOARD_NOTICE p
+			LEFT OUTER JOIN USER_INFO u
+			ON p.user_id = u.user_id 
+		WHERE p.doc_no = #{doc_no}
+	</select>
+	
+	<!-- 문서 수정 -->
+	<update id="JmhUpdateBoard" parameterType="BoardNotice">
+		UPDATE BOARD_NOTICE 
+		SET 
+			SUBJECT			= #{subject},
+			BODY			= #{body},
+			MODIFY_DATETIME	= now()
+		WHERE doc_no=#{doc_no}
+	</update>
+	
+	<!-- 문서 삭제 -->
+	<delete id="JmhDeleteBoard" parameterType="BoardNotice">
+		DELETE BOARD_NOTICE 
+		WHERE doc_no=#{doc_no}
+	</delete>
+	
+	<!-- 조회수 증가 -->
+	<update id="JmhReadCount" parameterType="BoardNotice">
+		UPDATE BOARD_NOTICE 
+		SET    BD_COUNT=BD_COUNT+1
+		WHERE  doc_no=#{doc_no}
+	</update>
+	
+</mapper>

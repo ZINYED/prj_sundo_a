@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-config.dtd">
+
+<configuration>
+    <typeAliases>
+		<typeAlias alias="egovMap" type="org.egovframe.rte.psl.dataaccess.util.EgovMap"/>
+		<typeAlias alias="boardVO" type="com.postgres.sample.dto.BoardVO"/>
+		
+		<typeAlias alias="accessLog" type="com.postgres.sample.dto.AccessLog"/>
+		<typeAlias alias="actionReport" type="com.postgres.sample.dto.ActionReport"/>
+		<typeAlias alias="alarm" type="com.postgres.sample.dto.Alarm"/>
+		<typeAlias alias="boardNotice" type="com.postgres.sample.dto.BoardNotice"/>
+		<typeAlias alias="breakReport" type="com.postgres.sample.dto.BreakReport"/>
+		<typeAlias alias="checkReport" type="com.postgres.sample.dto.CheckReport"/>
+		<typeAlias alias="checkItemInfo" type="com.postgres.sample.dto.CheckItemInfo"/>
+		<typeAlias alias="checkList" type="com.postgres.sample.dto.CheckList"/>
+		<typeAlias alias="code" type="com.postgres.sample.dto.Code"/>
+		<typeAlias alias="fileAttach" type="com.postgres.sample.dto.FileAttach"/>
+		<typeAlias alias="flow" type="com.postgres.sample.dto.Flow"/>
+		<typeAlias alias="loginLog" type="com.postgres.sample.dto.LoginLog"/>
+		<typeAlias alias="observation" type="com.postgres.sample.dto.Observation"/>
+		<typeAlias alias="organization" type="com.postgres.sample.dto.Organization"/>
+		<typeAlias alias="rainFall" type="com.postgres.sample.dto.RainFall"/>
+		<typeAlias alias="userInfo" type="com.postgres.sample.dto.UserInfo"/>
+		<typeAlias alias="waterGate" type="com.postgres.sample.dto.WaterGate"/>
+		<typeAlias alias="waterLevel" type="com.postgres.sample.dto.WaterLevel"/>
+		<typeAlias alias="waterResources" type="com.postgres.sample.dto.WaterResources"/>
+		<typeAlias alias="orgArea" type="com.postgres.sample.dto.OrgArea"/>
+		<typeAlias alias="LKH_WaterResources" type="com.postgres.sample.dto.LKH_WaterResources"/>
+		<typeAlias alias="categoryVO" type="com.postgres.sample.dto.CategoryVO"/>
+    </typeAliases>
+</configuration>

@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.postgres.sample.service.impl.dao.lkh.LKH_WaterResourcesDAO">
+
+
+    <select id="SelectWaterResourceList" resultType="waterResources"  parameterType="waterResources">
+			SELECT *
+			FROM
+			    (
+			        SELECT
+			            ROW_NUMBER() OVER() AS rn,
+			            a.*
+			        FROM
+			            (
+			                SELECT
+			                    wr.*,
+			               		ar.org_area_name,	-- 행정구역이름
+			                    org.org_name,		-- 운영기관 이름
+			                    code.cate_name       -- 유형
+			                FROM
+			                    water_resources wr
+			                    INNER JOIN organization org ON wr.org_code = org.org_code
+								INNER JOIN org_area ar ON  wr.org_area =ar.org_area
+			                    INNER JOIN (
+			                        SELECT *
+			                        FROM CODE
+			                        WHERE field_name = 'facility_type'
+			                    ) code ON wr.facility_type = code.cate_code
+						<!--	where
+								<if test="facility_category != ''">
+									wr.facility_category = #{facility_category}
+								</if>
+								<if test="org_code != ''">
+									and wr.org_code like '%' || #{org_code} || '%'
+								</if>
+								<if test="facility_code != ''">
+									and wr.facility_code like '%' || #{facility_code} || '%'
+								</if>
+								<if test="org_area != ''">
+									and wr.org_area like '%' || #{org_area} || '%'
+								</if>-->
+						ORDER BY wr.facility_code, code.cate_name
+			            ) a
+			    )
+		OFFSET #{start}-1
+		LIMIT 10
+    </select>
+
+
+
+
+
+
+	<select id="countWaterResource"  resultType="waterResources">
+			select
+				count(*) as total
+			from
+				water_resources w, organization o
+			where
+				w.org_code = o.org_code
+	</select>
+
+
+	<select id="waterResourceDetail" parameterType="String" resultType="waterResources">
+		SELECT
+			wr.*,
+			ar.org_area_name,	-- 행정구역이름
+			org.org_name,		-- 운영기관 이름
+			code.cate_name       -- 유형
+		FROM
+			water_resources wr
+				INNER JOIN organization org ON wr.org_code = org.org_code
+				INNER JOIN org_area ar ON  wr.org_area =ar.org_area
+				INNER JOIN (
+				SELECT *
+				FROM CODE
+				WHERE field_name = 'facility_type'
+			) code ON wr.facility_type = code.cate_code
+
+		WHERE  wr.facility_code =#{facility_code}
+	</select>
+
+
+	<insert id="waterResourcesInsert" parameterType="waterResources">
+    INSERT INTO water_resources (
+        facility_code,
+        facility_category,
+        facility_addr,
+        facility_type,
+        org_code,
+        org_area,
+		latitude,
+        longitude,
+        create_datetime,
+        modify_datetime
+    ) VALUES (
+        #{facility_code},
+        #{facility_category},
+        #{facility_addr},
+        #{facility_type},
+        #{org_code},
+        #{org_area},
+        #{latitude},
+        #{longitude},
+        CURRENT_DATE,
+		CURRENT_DATE
+    )
+	</insert>
+
+
+	<select id="findfacilityCategory" resultType="waterResources">
+		select
+			facility_category
+		from
+			water_resources
+		group by
+			facility_category
+
+	</select>
+
+
+	<select id="organizationCategory" resultType="Organization">
+		select
+			org_code ,org_name
+		from
+			Organization
+	</select>
+
+
+	<select id="OrgAreaCategory" resultType="OrgArea">
+		select * from org_area
+	</select>
+
+
+	<select id="facilityCategoryType" resultType="code" parameterType="String">
+	    SELECT
+	        cate_code, cate_name
+	    FROM
+	        code
+	    WHERE
+	        field_name = 'facility_type' AND cate_code like '%' || #{divison} || '%'
+	    ORDER BY
+	        cate_code
+	</select>
+
+
+
+	<select id="doughnutChart" resultType="java.lang.Integer">
+		SELECT COUNT(*) AS water_resources_count
+		FROM water_resources
+		GROUP BY facility_category
+		ORDER BY facility_category
+	</select>
+
+
+
+	<select id="orgAreaLineGraph" resultType="waterResources">
+		SELECT
+			wr.org_area,org_area_name,
+			SUM(CASE WHEN wr.facility_category = '댐' THEN 1 ELSE 0 END) AS category_1,
+			SUM(CASE WHEN wr.facility_category = '저수지' THEN 1 ELSE 0 END) AS category_2,
+			SUM(CASE WHEN wr.facility_category = '펌프장' THEN 1 ELSE 0 END) AS category_3,
+			SUM(CASE WHEN wr.facility_category = '관개수로' THEN 1 ELSE 0 END) AS category_4
+		FROM
+			water_resources wr , org_area o
+		where
+			wr.org_area = o.org_area
+		group by
+			wr.org_area,o.org_area_name
+
+	</select>
+</mapper>
+

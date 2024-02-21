@@ -1,0 +1,28 @@
+서버 포트 : 8383
+
+
+기존  mvc 구조: 
+동일 패키지 내
+service / serviceimpl / dao / daoimpl
+
+현재  구조:
+service.		KjoServiceClass
+
+service.impl.	KjoServiceImplClass
+
+service.impl.dao.	KjoDaoClass
+
+
+기존
+db xml 위치:
+src/main/resources/mappers하위
+
+현재
+db xml 위치:
+src/main/resources/sqlmap/example/mappers
+
+sql-mapper-config.xml : 기존 configuration.xml
+EgovMap = iBatis 를 위한 Map
+
+뷰 파일 위치:
+WEB-INF / views / ~~

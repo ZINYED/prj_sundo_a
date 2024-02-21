@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.postgres.sample.service.impl.dao.jmh.BoardUserInfoDAO">
+
+	<!-- 코드 분류 가져오기 -->
+	<select id="JmhCodeList3" parameterType="Code" resultType="Code">
+		SELECT *
+		FROM CODE
+		WHERE field_name = #{field_name}
+		ORDER BY cate_code
+	</select>
+	
+	<!-- 총 문서수 -->
+	<select id="JmhTotalCount" parameterType="UserInfo" resultType="int">
+		SELECT Count(*) 
+		FROM USER_INFO
+	</select>
+
+	<!-- 검색 문서수 -->
+	<select id="JmhSearchCount" parameterType="UserInfo" resultType="int">
+		SELECT Count(*)
+		FROM ( SELECT * 							
+				 FROM USER_INFO
+				ORDER BY user_name) a
+		WHERE 1=1
+		AND 
+			<choose>
+				<when test="search == '1_system_category'">
+					 a.system_category like '%' || #{keyword} || '%' 
+				</when>
+				<when test="search == '2_user_id'">
+					 a.user_id like '%' || #{keyword} || '%'
+				</when>
+				<when test="search == '3_user_name'">
+					 a.user_name like '%' || #{keyword} || '%'
+				</when>
+				<otherwise>
+					 a.user_name like '%' || #{keyword} || '%'
+				</otherwise>
+			</choose>
+	</select>
+	
+	<!-- 문서 목록 -->
+	<select id="JmhBoardList" parameterType="UserInfo" resultType="UserInfo">
+		SELECT *
+		FROM
+		(
+			SELECT (row_number() over()) AS rn, a.*
+			FROM
+					( SELECT u.*, c.cate_name system_name, o.org_name
+						FROM USER_INFO u
+							 LEFT OUTER JOIN CODE c
+								 ON u.system_category = c.cate_code
+								 AND c.field_name = 'system_category'
+							 LEFT OUTER JOIN ORGANIZATION o
+								 ON u.org_code = o.org_code
+					  ORDER BY user_name) a
+		)
+		WHERE rn BETWEEN #{start} AND #{end}
+	</select>
+
+	<!-- 검색 목록 -->
+	<select id="JmhSearchList" parameterType="UserInfo" resultType="UserInfo">
+		SELECT *
+		FROM
+		(
+			SELECT (row_number() over()) AS rn, a.*
+			FROM
+					( SELECT u.*, c.cate_name system_name, o.org_name
+						FROM USER_INFO u
+							 LEFT OUTER JOIN CODE c
+								 ON u.system_category = c.cate_code
+								 AND c.field_name = 'system_category'
+							 LEFT OUTER JOIN ORGANIZATION o
+								 ON u.org_code = o.org_code
+					  ORDER BY user_name) a
+			WHERE 1=1
+			AND 
+			<choose>
+				<when test="search == '1_system_category'">
+					 a.system_category like '%' || #{keyword} || '%' 
+				</when>
+				<when test="search == '2_user_id'">
+					 a.user_id like '%' || #{keyword} || '%'
+				</when>
+				<when test="search == '3_user_name'">
+					 a.user_name like '%' || #{keyword} || '%'
+				</when>
+				<otherwise>
+					 a.user_name like '%' || #{keyword} || '%'
+				</otherwise>
+			</choose>
+		)
+		WHERE rn BETWEEN #{start} AND #{end}
+		
+	</select>
+	
+	<!-- 문서 등록 -->
+	<insert id="JmhInsertBoard" parameterType="UserInfo">
+		<selectKey resultType="int" keyProperty="doc_no" order="BEFORE">
+        	SELECT COALESCE(MAX(doc_no),0)+1 FROM USER_INFO
+    	</selectKey>
+		INSERT INTO 
+			USER_INFO(
+				DOC_NO, 
+				SUBJECT,
+				USER_ID,
+				CREATE_DATE, 
+				BD_COUNT,
+				BODY,
+				CREATE_DATETIME,
+				MODIFY_DATETIME
+			) 				
+			VALUES(
+				#{doc_no}, 
+				#{subject},
+				#{user_id},
+				CURRENT_DATE, 
+				0,
+				#{body},
+				NOW(),
+				NOW()
+			)	
+	</insert>
+	
+	<!-- 문서 조회 -->
+	<select id="JmhSelectBoard" parameterType="UserInfo" resultType="UserInfo">
+		SELECT u.*, c.cate_name system_name, o.org_name
+		FROM USER_INFO u
+			 LEFT OUTER JOIN CODE c
+				 ON u.system_category = c.cate_code
+				 AND c.field_name = 'system_category'
+			 LEFT OUTER JOIN ORGANIZATION o
+				 ON u.org_code = o.org_code
+		WHERE user_id = #{user_id}
+	</select>
+	
+	<!-- 문서 수정 -->
+	<update id="JmhUpdateBoard" parameterType="UserInfo">
+		UPDATE USER_INFO 
+		SET system_category =  #{system_category},
+		    user_name 		= #{user_name},
+		    user_email 		= #{user_email},
+		    user_tel 		= #{user_tel},
+		    org_code 		= #{org_code}, 
+		    user_department = #{user_department},
+		    user_position 	= #{user_position},
+		    use_flag 		= #{use_flag},
+		    modify_datetime = now()
+		WHERE user_id=#{user_id}
+		
+	</update>
+	
+	<!-- 문서 삭제 -->
+	<delete id="JmhDeleteBoard" parameterType="UserInfo">
+		DELETE USER_INFO 
+		WHERE user_id=#{user_id}
+	</delete>
+	
+</mapper>

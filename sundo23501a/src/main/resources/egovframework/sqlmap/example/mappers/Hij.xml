@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="com.postgres.sample.service.impl.dao.hij.HijDao">
+
+	<!-- 관측소 목록 갯수 -->
+	<select id="ijTotalCount" resultType="int">
+		SELECT COUNT(*)
+		FROM Observation
+	</select>
+	
+	<!-- 관측소 목록 리스트 -->
+	<select id="ijObservationList" parameterType="Observation" resultType="Observation">
+		SELECT *
+		FROM(	
+			SELECT (row_number() over()) AS rn, a.*
+			FROM(
+				SELECT T.*, C.cate_name observe_method_name, O.org_name, O.org_area
+				FROM 
+				   Observation T
+				   LEFT OUTER JOIN Code C
+				      ON T.observe_method = C.cate_code
+				      AND C.field_name = 'observe_method'
+				   LEFT OUTER JOIN Organization O
+				      ON T.org_code = O.org_code
+				      )a
+				)
+		WHERE rn BETWEEN #{start} and #{end}
+			
+	</select>
+	
+	<!-- 코드 리스트 -->
+	<select id="ijGetCodeList" parameterType="String" resultType="Code">
+		SELECT *
+		FROM Code
+		WHERE field_name = #{field_name}
+	</select>
+	
+	<!-- Organiztion 리스트 -->
+	<select id="ijGetOrgList" resultType="Organization">
+		SELECT *
+		FROM ORGANIZATION
+	</select>
+	
+	<!-- 필요한 테이블의 필드 가져오기 -->
+	<select id="ijGetCategoryList" parameterType="CategoryVO" resultType="Organization">
+		SELECT ${field_name}
+		FROM ${tbl_name}
+		GROUP BY ${field_name}
+	</select>
+	
+	<!-- 관측소 등록 -->
+	<insert id="ijObCreate" parameterType="Observation">
+		
+		INSERT INTO observation 
+				(observe_code, 
+				observe_post, 
+				river_code, 
+				observe_type, 
+				latitude, 
+				longitude, 
+				observe_method, 
+				org_code, 
+				org_area, 
+				create_datetime, 
+				modify_datetime)
+		VALUES(
+				(SELECT (MAX(observe_code)+1) FROM Observation), 
+				#{observe_post}, 
+				#{river_code}, 
+				#{observe_type}, 
+				#{latitude}, 
+				#{longitude}, 
+				#{observe_method}, 
+				#{org_code}, 
+				#{org_area}, 
+				NOW(), 
+				NOW())
+	</insert>
+	
+	<!-- river_code, river_name 가져오기 -->
+	<select id="ijWaterGateList"  resultType="Watergate">
+		SELECT *
+		FROM Water_Gate
+	</select>
+	
+	<!-- 관측소 테이블안 필드 가져오기 -->
+	<select id="ijGetObservation" parameterType="Observation" resultType="Observation">
+		SELECT T.*, C.cate_name observe_method_name, C2.cate_name observe_type_name, O.org_name, O.org_area
+     	 FROM 
+	         Observation T
+	         LEFT OUTER JOIN Code C
+	            ON T.observe_method = C.cate_code
+	            AND C.field_name = 'observe_method'
+	         LEFT OUTER JOIN Code C2
+	            ON T.observe_type = C2.cate_code
+	            AND C2.field_name = 'observe_type'
+	         LEFT OUTER JOIN Organization O
+	            ON T.org_code = O.org_code
+		WHERE T.observe_code=#{observe_code}
+	</select>
+	
+	<!-- 관측소 수정 -->
+	<update id="ijObEdit" parameterType="Observation">
+		UPDATE observation SET 
+				observe_code=#{observe_code}, 
+				observe_post=#{observe_post}, 
+				river_code=#{river_code}, 
+				observe_type=#{observe_type}, 
+				latitude=#{latitude}, 
+				longitude=#{longitude}, 
+				observe_method=#{observe_method}, 
+				org_code=#{org_code}, 
+				org_area=#{org_area}, 
+				modify_datetime=NOW()
+		WHERE observe_code=#{observe_code}
+	</update>
+	
+	<!-- 관측소 삭제 -->
+	<delete id="ijObDelete" parameterType="Observation">
+		DELETE FROM Observation WHERE observe_code=#{observe_code}
+	</delete>
+	
+	
+	<!-- 2. 관측소 - 시자료 -->
+	
+	<!-- 시자료 리스트 -->
+	<select id="ijWaterLevelList" parameterType="WaterLevel" resultType="WaterLevel">
+			SELECT *
+			FROM(
+				SELECT (row_number() over()) AS rn, a.*	
+				FROM(
+					SELECT W.*, T.observe_post, T.observe_code
+						FROM 
+						   water_level W
+						   LEFT OUTER JOIN Observation T
+						   ON W.river_code = T.river_code
+						   WHERE W.river_code=#{river_code}
+						  )a
+				)
+		WHERE rn BETWEEN #{start} and #{end}
+				
+	</select>
+	
+	<!-- waterLevel Total -->
+	<select id="ijWaterLevelTotal" resultType="int">
+		SELECT COUNT(*)
+		FROM Water_Level
+	</select>
+
+</mapper>

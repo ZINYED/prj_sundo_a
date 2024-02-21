@@ -1,0 +1,255 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="com.postgres.sample.service.impl.dao.kjo.KjoDao">
+    <select id="findAllCheckItemInfo" resultType="checkItemInfo">
+        select *
+        from check_item_info
+    </select>
+
+    <select id="cntChkListByFacilityCode" parameterType="checkList" resultType="checkList">
+        select count(*) as total
+        from check_list
+        where facility_code = #{facility_code}
+    </select>
+
+    <insert id="inputChkList" parameterType="checkList">
+        insert into check_list
+        values (#{doc_no}, #{facility_code}, #{check_category}, #{check_item}, #{check_grade}, #{note},
+                #{checklistist_no})
+    </insert>
+    <select id="cntByFacilityCode" parameterType="checkReport" resultType="checkReport">
+        select count(*) as total
+        from check_report
+        where facility_code = #{facility_code}
+    </select>
+
+    <select id="cntAllReport" resultType="checkReport">
+        select count(*) as total
+        from check_report
+    </select>
+
+    <insert id="inputChkReport" parameterType="checkReport">
+        insert into check_report
+        values (#{doc_no}, #{facility_code}, #{check_date}::date,
+                #{weather}, #{user_id}, #{check_result}, #{spec_memo}, current_date, current_date)
+    </insert>
+    <select id="findChkReport" parameterType="checkReport" resultType="checkReport">
+        select *
+        from (select row_number() over() as rn,ui.user_name, cr.*, wr.facility_category, org.org_name, ar.org_area_name
+              from check_report cr
+                       join water_resources wr
+                            on cr.facility_code = wr.facility_code
+                       INNER JOIN org_area ar ON wr.org_area = ar.org_area
+                       INNER JOIN ORGANIZATION org ON wr.org_code = org.org_code
+                       INNER JOIN user_info ui ON cr.user_id = ui.user_id
+              order by rn)
+    </select>
+    <select id="pageChkReport" parameterType="checkReport" resultType="checkReport">
+        select *
+        from (select row_number() over() as rn,ui.user_name, cr.*, wr.facility_category, org.org_name, ar.org_area_name
+              from check_report cr
+                       join water_resources wr
+                            on cr.facility_code = wr.facility_code
+                       INNER JOIN org_area ar ON wr.org_area = ar.org_area
+                       INNER JOIN ORGANIZATION org ON wr.org_code = org.org_code
+                       INNER JOIN user_info ui ON cr.user_id = ui.user_id
+              order by rn) offset #{start} limit 10
+    </select>
+
+
+    <select id="pageSearchChkReport" parameterType="checkReport" resultType="checkReport">
+        select * from
+        (
+        select row_number() over() as rn,ui.user_name, cr.*, wr.facility_category , org.org_name,
+        ar.org_area_name,ui.user_department
+        from check_report cr join water_resources wr
+        on cr.facility_code = wr.facility_code
+        INNER JOIN org_area ar ON wr.org_area =ar.org_area
+        INNER JOIN ORGANIZATION org ON wr.org_code =org.org_code
+        INNER JOIN user_info ui ON cr.user_id =ui.user_id
+        where wr.facility_category like '%' || #{facility_category} || '%'
+        and ar.org_area_name like '%' || #{org_area_name} || '%'
+        and org.org_name like '%' || #{org_name} || '%'
+        and ui.user_department like '%' || #{user_department} || '%'
+        and cr.facility_code like '%' || #{facility_code} || '%'
+        <choose>
+            <when test="#{firstdate} == ''">
+                <![CDATA[ and  cr.check_date <= #{secdate}]]>
+            </when>
+            <when test="#{secdate} == ''">
+                <![CDATA[and cr.check_date >= #{firstdate}]]>
+            </when>
+            <otherwise>
+                and cr.check_date between #{firstdate} and #{secdate}
+            </otherwise>
+
+        </choose>
+        order by rn
+        )
+        offset #{start}-1 limit 10
+    </select>
+
+    <select id="cntSearchChkReport" parameterType="checkReport" resultType="checkReport">
+        select count(*) as total from
+        (
+        select row_number() over() as rn,ui.user_name, cr.*, wr.facility_category , org.org_name,
+        ar.org_area_name,ui.user_department
+        from check_report cr join water_resources wr
+        on cr.facility_code = wr.facility_code
+        INNER JOIN org_area ar ON wr.org_area =ar.org_area
+        INNER JOIN ORGANIZATION org ON wr.org_code =org.org_code
+        INNER JOIN user_info ui ON cr.user_id =ui.user_id
+        where wr.facility_category like '%' || #{facility_category} || '%'
+        and ar.org_area_name like '%' || #{org_area_name} || '%'
+        and org.org_name like '%' || #{org_name} || '%'
+        and ui.user_department like '%' || #{user_department} || '%'
+        and cr.facility_code like '%' || #{facility_code} || '%'
+        <choose>
+            <when test="#{firstdate} == ''">
+                <![CDATA[ and  cr.check_date <= #{secdate}]]>
+            </when>
+            <when test="#{secdate} == ''">
+                <![CDATA[and cr.check_date >= #{firstdate}]]>
+            </when>
+            <otherwise>
+                and cr.check_date between #{firstdate} and #{secdate}
+            </otherwise>
+
+        </choose>
+        )
+    </select>
+    <select id="SelectObsList" resultType="observation">
+        select *
+        from observation
+    </select>
+    <select id="findAllOrgList" resultType="organization">
+        select *
+        from ORGANIZATION
+    </select>
+
+
+    <select id="findAllOrgArea" resultType="orgArea">
+        select *
+        from org_area
+    </select>
+
+
+    <select id="findUserId" parameterType="userInfo" resultType="userInfo">
+
+        select *
+        from user_info
+        where user_name = #{user_name}
+          and user_position = #{user_position}
+          and user_department = #{user_department}
+    </select>
+
+    <select id="cntWaterResource" resultType="waterResources">
+        select count(*) as total
+        from water_resources wr,
+             organization org
+        where wr.org_code = org.org_code
+    </select>
+
+    <select id="findFacilityCategory" resultType="waterResources">
+        select facility_category
+        from water_resources
+        group by facility_category
+    </select>
+
+    <select id="findFacilityAddr" resultType="waterResources">
+        select facility_addr
+        from water_resources
+        group by facility_addr
+        order by facility_addr
+    </select>
+
+    <select id="findWaterResourceLists" resultType="waterResources">
+        select ROW_NUMBER() over() as rn, *
+        from (select wr.*,
+                     org.org_name,
+                     split_part(wr.facility_addr::varchar, ' ', 1) as first_area,
+                     split_part(wr.facility_addr::varchar, ' ', 2) as second_area
+              from water_resources wr,
+                   organization org
+              where wr.org_code = org.org_code
+              order by facility_code)
+    </select>
+
+    <select id="PaingWaterResourceLists" parameterType="waterResources" resultType="waterResources">
+        select ROW_NUMBER() over() as rn, *
+        from (select cd.cate_name,
+                     wr.*,
+                     org.org_name,
+                     split_part(wr.facility_addr::varchar, ' ', 1) as first_area,
+                     split_part(wr.facility_addr::varchar, ' ', 2) as second_area
+              from water_resources wr,
+                   organization org,
+                   code cd
+              where wr.org_code = org.org_code
+                and wr.facility_type = cd.cate_code
+              order by facility_code) offset #{start}-1 limit 10
+    </select>
+
+    <select id="findFacilityAddrbyCategory" parameterType="waterResources" resultType="waterResources">
+        select *
+        from (select wr.facility_addr
+              from water_resources wr,
+                   organization org
+              where wr.org_code = org.org_code
+                and wr.facility_category = #{facility_category}
+              order by facility_code)
+    </select>
+
+    <select id="searchWaterResources" parameterType="waterResources" resultType="waterResources">
+        select * from
+        (select ROW_NUMBER() over() as rn, wr.*,cd.cate_name, (select org_name from organization where org_area like '%'
+        || #{org_area} || '%'),split_part(wr.facility_addr::varchar, ' ', 1) as first_area,
+        split_part(wr.facility_addr::varchar, ' ', 2)as second_area
+        from water_resources wr, organization org, code cd
+        where wr.org_code = org.org_code and wr.facility_type = cd.cate_code
+        <if test="facility_category != ''">
+            and wr.facility_category = #{facility_category}
+        </if>
+        <if test="facility_addr != ''">
+            and wr.org_area like '%' || #{org_area} || '%'
+        </if>
+        <if test="facility_code != ''">
+            and wr.facility_code like '%' || #{facility_code} || '%'
+        </if>
+        <if test="cate_name != ''">
+            and cd.cate_name like '%' || #{cate_name} || '%'
+        </if>
+        order by rn)
+        where rn between #{start} and #{end}
+    </select>
+
+    <select id="searchCnt" parameterType="waterResources" resultType="waterResources">
+        select count(*) as total from
+        (select ROW_NUMBER() over() as rn, wr.*,cd.cate_name, (select org_name from organization where org_area like '%'
+        || #{org_area} || '%'),split_part(wr.facility_addr::varchar, ' ', 1) as first_area,
+        split_part(wr.facility_addr::varchar, ' ', 2)as second_area
+        from water_resources wr, organization org, code cd
+        where wr.org_code = org.org_code and wr.facility_type = cd.cate_code
+        <if test="facility_category != ''">
+            and wr.facility_category = #{facility_category}
+        </if>
+        <if test="facility_addr != ''">
+            and wr.org_area like '%' || #{org_area} || '%'
+        </if>
+        <if test="facility_code != ''">
+            and wr.facility_code like '%' || #{facility_code} || '%'
+        </if>
+        <if test="cate_name != ''">
+            and cd.cate_name like '%' || #{cate_name} || '%'
+        </if>
+        )
+    </select>
+    <select id="findWaterResourcesById" parameterType="waterResources" resultType="waterResources">
+        select *
+        from water_resources wr,
+             code cd
+        where wr.facility_type = cd.cate_code
+          and wr.facility_code = #{facility_code}
+    </select>
+</mapper>

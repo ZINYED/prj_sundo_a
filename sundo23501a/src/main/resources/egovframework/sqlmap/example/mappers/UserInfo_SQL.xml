@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.postgres.sample.service.impl.dao.jmh.UserInfoDAO">
+    
+    <!-- 로그인 check -->
+	<select id="JmhUserLoginCheck" parameterType="UserInfo" resultType="UserInfo">
+		Select u.*, c.cate_name system_name, o.org_name
+		FROM USER_INFO u
+			 LEFT OUTER JOIN CODE c
+				 ON u.system_category = c.cate_code
+				 AND c.field_name = 'system_category'
+			 LEFT OUTER JOIN ORGANIZATION o
+				 ON u.org_code = o.org_code
+		Where  user_id = #{user_id}
+		And    user_pw = #{user_pw}
+	</select>
+	<select id="JmhUserLoginSystemCheck" parameterType="UserInfo" resultType="UserInfo">
+		Select u.*, c.cate_name system_name, o.org_name
+		FROM USER_INFO u
+			 LEFT OUTER JOIN CODE c
+				 ON u.system_category = c.cate_code
+				 AND c.field_name = 'system_category'
+			 LEFT OUTER JOIN ORGANIZATION o
+				 ON u.org_code = o.org_code
+		Where  user_id = #{user_id}
+		And    user_pw = #{user_pw}
+		And	   system_category = #{system_category}
+	</select>
+	
+	<!-- 기간명 가져오기 -->
+	<select id="JmhOrgList" resultType="Organization">
+		SELECT *
+		FROM ORGANIZATION
+	</select>
+	
+	<!-- 코드 분류 가져오기 -->
+	<select id="JmhCodeList" parameterType="Code" resultType="Code">
+		SELECT *
+		FROM CODE
+		WHERE field_name = #{field_name}
+		ORDER BY cate_code
+	</select>		
+	
+	<!-- 회원가입 insert -->
+	<insert id="JmhInsertUserInfo" parameterType="UserInfo">    <!-- #{project_id, jdbcType = VARCHAR} -->
+		INSERT INTO
+		  USER_INFO(user_id,    user_pw,    system_category,    user_name,    user_email,    user_tel,    org_code,    user_department,    user_position,   use_flag, create_datetime, modify_datetime)  
+		  VALUES (#{user_id}, #{user_pw}, #{system_category}, #{user_name}, #{user_email}, #{user_tel}, #{org_code}, #{user_department}, #{user_position}, 'N',        now(),        now())
+	</insert>
+	
+	
+	<!-- 회원가입 ID 중복확인 -->
+	<select id="JmhIdConfirm" parameterType="String" resultType="userInfo">
+		Select u.*, c.cate_name system_name, o.org_name
+		FROM USER_INFO u
+			 LEFT OUTER JOIN CODE c
+				 ON u.system_category = c.cate_code
+				 AND c.field_name = 'system_category'
+			 LEFT OUTER JOIN ORGANIZATION o
+				 ON u.org_code = o.org_code
+		Where  user_id = #{user_id}
+	</select>
+
+	<!-- 아이디 찾기 -->
+	<select id="userFindId" parameterType="userInfo" resultType="userInfo">
+		Select *
+		From   user_info
+		Where  user_name   = #{user_name}
+		And    user_number = #{user_number}
+	</select>
+	
+	<!-- 비밀번호 업데이트 -->
+ 	<update id="pwUpdate" parameterType="hashmap">
+		Update user_info
+		Set    user_pw = #{user_pw}
+		where  user_id = #{user_id}
+	</update>
+	            
+	<update id="JmhUpdateUser" parameterType="UserInfo">
+        UPDATE user_info
+        SET
+	            system_category = #{system_category}
+	            ,user_pw    = #{user_pw}
+	            ,user_name  = #{user_name}
+ 	            ,user_tel 	= #{user_tel}
+	            ,user_email   = #{user_email}
+	            ,org_code   = #{org_code}
+	            ,user_department = #{user_department}
+	            ,user_position = #{user_position}
+	            ,modify_datetime = now()
+        WHERE user_id = #{user_id}
+	</update>
+
+</mapper>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.postgres.sample.service.impl.dao.kjo.BoardDAO">
+    <select id="SelectBoardList" resultType="organization">
+		select * from organization
+    </select>
+</mapper>
