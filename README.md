@@ -1,4 +1,4 @@
-# 한강 수자원 관리 종합 정보 플랫폼
+# 한강 수자원 관리 종합 플랫폼
 ![sundo_main](https://github.com/ZINYED/prj_sundo_a/assets/118190422/40c208a9-f193-430a-b4f1-4e44b3df0707)
 
 ### [✔ 전체 PPT](https://github.com/ZINYED/prj_sundo_a/files/14535816/sundo_a.pdf)
